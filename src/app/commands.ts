@@ -11,7 +11,7 @@ type CommandStoreType = {
 
 type ChannelListType = {
   readonly name: string;
-  readonly users: number;
+  readonly user_count: number;
   readonly channel: GuildChannel;
 };
 
@@ -45,13 +45,13 @@ async function list(payload: MessagePayloadType) {
 
       acc.push({
         name: channel.name,
-        users: totalUsers,
+        user_count: totalUsers,
         channel: channel,
       });
 
       return acc;
     }, [])
-    .sort((a, b) => b.users - a.users);
+    .sort((a, b) => b.user_count - a.user_count);
 
   // TODO: Create user friendly response.
   await payload.source
