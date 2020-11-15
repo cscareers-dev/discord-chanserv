@@ -35,14 +35,22 @@ async function list(payload: MessagePayloadType) {
 
       return categoryName === COMMUNITY_CATEGORY;
     })
-    .map((channel) => ({
-      name: channel.name,
-      users: channel.permissionOverwrites.filter(
+    .reduce((acc: ChannelListType[], channel) => {
+      const totalUsers = channel.permissionOverwrites.filter(
         (permission) => permission.type === 'member',
-      ).size,
-      channel: channel,
-    }))
-    .filter((channel) => Boolean(channel.users))
+      ).size;
+      if (totalUsers === 0) {
+        return acc;
+      }
+
+      acc.push({
+        name: channel.name,
+        users: totalUsers,
+        channel: channel,
+      });
+
+      return acc;
+    }, [])
     .sort((a, b) => b.users - a.users);
 
   // TODO: Create user friendly response.
