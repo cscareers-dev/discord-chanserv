@@ -19,10 +19,10 @@ async function run() {
     .catch(Logger.error);
 
   discordClient.on('message', async (message: DiscordMessageType) => {
-    const isInvalidMessage =
-      message.author.bot || message.content[0] !== Constants.Prefix;
+    const isValidMessage =
+      !message.author.bot && message.content[0] === Constants.Prefix;
 
-    if (isInvalidMessage) {
+    if (!isValidMessage) {
       return;
     }
 
