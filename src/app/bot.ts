@@ -2,6 +2,7 @@ import Logger from '../util/logger';
 import Environment from '../environment';
 import { Client } from 'discord.js';
 import { adaptMessage, DiscordMessageType, handleMessage } from './messages';
+import Constants from '../constants';
 
 async function run() {
   if (!Environment.DiscordToken) {
@@ -18,7 +19,10 @@ async function run() {
     .catch(Logger.error);
 
   discordClient.on('message', async (message: DiscordMessageType) => {
-    if (message.author.bot) {
+    const isInvalidMessage =
+      message.author.bot || message.content[0] !== Constants.Prefix;
+
+    if (isInvalidMessage) {
       return;
     }
 
