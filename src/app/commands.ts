@@ -1,3 +1,4 @@
+import { TextChannel } from 'discord.js';
 import Logger from '../util/logger';
 import { MessagePayloadType } from './messages';
 
@@ -8,8 +9,29 @@ type CommandStoreType = {
   create: (payload: MessagePayloadType) => Promise<void>;
 };
 
-async function list(payload) {
-  Logger.info('list cmd');
+const COMMUNITY_CATEGORY = 'community channels';
+
+async function list(payload: MessagePayloadType) {
+  const { guild } = payload.source;
+  const communityChannels = guild.channels.cache.filter((channel) => {
+    const { parentID } = channel;
+    if (!parentID) {
+      return false;
+    }
+
+    const categoryName = (
+      guild.channels.cache.get(parentID)?.name || ''
+    ).toLowerCase();
+    if (!categoryName) {
+      return false;
+    }
+
+    return categoryName === COMMUNITY_CATEGORY;
+  });
+
+  communityChannels.forEach((channel) =>
+    Logger.info(channel.permissionOverwrites),
+  );
 }
 
 async function register(payload) {
