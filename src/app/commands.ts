@@ -1,4 +1,4 @@
-import { GuildChannel, TextChannel } from 'discord.js';
+import { GuildChannel } from 'discord.js';
 import Logger from '../util/logger';
 import { MessagePayloadType } from './messages';
 
