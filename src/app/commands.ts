@@ -1,25 +1,26 @@
 import Logger from '../util/logger';
+import { MessagePayloadType } from './messages';
 
 type CommandStoreType = {
-  list: () => Promise<void>;
-  register: () => Promise<void>;
-  unregister: () => Promise<void>;
-  create: () => Promise<void>;
+  list: (payload: MessagePayloadType) => Promise<void>;
+  register: (payload: MessagePayloadType) => Promise<void>;
+  unregister: (payload: MessagePayloadType) => Promise<void>;
+  create: (payload: MessagePayloadType) => Promise<void>;
 };
 
-async function list() {
+async function list(payload) {
   Logger.info('list cmd');
 }
 
-async function register() {
+async function register(payload) {
   Logger.info('register cmd');
 }
 
-async function unregister() {
+async function unregister(payload) {
   Logger.info('unregister cmd');
 }
 
-async function create() {
+async function create(payload) {
   Logger.info('create cmd');
 }
 
