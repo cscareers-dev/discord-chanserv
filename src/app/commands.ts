@@ -1,10 +1,11 @@
-import { GuildChannel } from 'discord.js';
+import { Guild, GuildChannel } from 'discord.js';
 import Logger from '../util/logger';
+import { Maybe } from '../util/types';
 import { MessagePayloadType } from './messages';
 
 type CommandStoreType = {
   list: (payload: MessagePayloadType) => Promise<void>;
-  register: (payload: MessagePayloadType) => Promise<void>;
+  join: (payload: MessagePayloadType) => Promise<void>;
   unregister: (payload: MessagePayloadType) => Promise<void>;
   create: (payload: MessagePayloadType) => Promise<void>;
 };
@@ -16,10 +17,14 @@ type ChannelListType = {
 };
 
 const COMMUNITY_CATEGORY = 'community channels';
+const BOT_COMMANDS_CHANNEL = 'bot_commands';
 
-async function list(payload: MessagePayloadType) {
-  const { guild } = payload.source;
-  const communityChannels: ChannelListType[] = guild.channels.cache
+const fetchCommunityChannels = (guild: Maybe<Guild>): ChannelListType[] => {
+  if (!guild) {
+    return [];
+  }
+
+  return guild.channels.cache
     .filter((channel) => {
       const { parentID } = channel;
       if (!parentID) {
@@ -52,6 +57,13 @@ async function list(payload: MessagePayloadType) {
       return acc;
     }, [])
     .sort((a, b) => b.user_count - a.user_count);
+};
+
+const stripChannelName = (input: string) =>
+  input.replace('#', '').replace(/ /g, '_').toLowerCase();
+
+async function list(payload: MessagePayloadType) {
+  const communityChannels = fetchCommunityChannels(payload.source.guild);
 
   // TODO: Create user friendly response.
   await payload.source
@@ -59,8 +71,47 @@ async function list(payload: MessagePayloadType) {
     .catch(Logger.error);
 }
 
-async function register(payload) {
-  Logger.info('register cmd');
+async function join(payload: MessagePayloadType) {
+  const currentChannelId = payload.source.channel.id;
+  const isBotChannel = Boolean(
+    payload.source.guild.channels.cache.find(
+      (channel) =>
+        channel.name === BOT_COMMANDS_CHANNEL &&
+        channel.id === currentChannelId,
+    ),
+  );
+
+  if (!isBotChannel) {
+    await payload.source.reply(
+      'Please run this command in the #bot_commands channel',
+    );
+    return;
+  }
+
+  const strippedChannelName = stripChannelName(payload.source.content);
+  const communityChannels = fetchCommunityChannels(payload.source.guild);
+  const targetChannel = communityChannels.find(
+    ({ channel }) => stripChannelName(channel.name) === strippedChannelName,
+  )?.channel;
+
+  if (!targetChannel) {
+    await payload.source.reply('Unable to locate this channel');
+    return;
+  }
+
+  await targetChannel
+    .updateOverwrite(payload.source.author, {
+      VIEW_CHANNEL: true,
+      SEND_MESSAGES: true,
+      READ_MESSAGE_HISTORY: true,
+    })
+    .then(
+      async () => await payload.source.reply('Successfully registered channel'),
+    )
+    .catch(async (error) => {
+      Logger.error(error);
+      await payload.source.reply('Unable to register you for this channel :(');
+    });
 }
 
 async function unregister(payload) {
@@ -73,7 +124,7 @@ async function create(payload) {
 
 const CommandStore: CommandStoreType = {
   list,
-  register,
+  join,
   unregister,
   create,
 };
