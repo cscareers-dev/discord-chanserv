@@ -84,7 +84,7 @@ async function list(payload: MessagePayloadType) {
 async function join(payload: MessagePayloadType) {
   if (!isFromBotChannel(payload.source)) {
     await payload.source.reply(
-      'Please run this command in the #bot_commands channel',
+      `Please run this command in the #${BOT_COMMANDS_CHANNEL} channel`,
     );
     return;
   }
@@ -118,7 +118,7 @@ async function join(payload: MessagePayloadType) {
 async function leave(payload: MessagePayloadType) {
   if (!isFromBotChannel(payload.source)) {
     await payload.source.reply(
-      'Please run this command in the #bot_commands channel',
+      `Please run this command in the #${BOT_COMMANDS_CHANNEL} channel`,
     );
     return;
   }
