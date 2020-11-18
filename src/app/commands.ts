@@ -1,12 +1,12 @@
 import { Guild, GuildChannel } from 'discord.js';
 import Logger from '../util/logger';
 import { Maybe } from '../util/types';
-import { MessagePayloadType } from './messages';
+import { DiscordMessageType, MessagePayloadType } from './messages';
 
 type CommandStoreType = {
   list: (payload: MessagePayloadType) => Promise<void>;
   join: (payload: MessagePayloadType) => Promise<void>;
-  unregister: (payload: MessagePayloadType) => Promise<void>;
+  leave: (payload: MessagePayloadType) => Promise<void>;
   create: (payload: MessagePayloadType) => Promise<void>;
 };
 
@@ -18,6 +18,16 @@ type ChannelListType = {
 
 const COMMUNITY_CATEGORY = 'community channels';
 const BOT_COMMANDS_CHANNEL = 'bot_commands';
+
+const isFromBotChannel = (message: DiscordMessageType) => {
+  const currentChannelId = message.channel.id;
+  return Boolean(
+    message.guild.channels.cache.find(
+      ({ name, id }) =>
+        name === BOT_COMMANDS_CHANNEL && id === currentChannelId,
+    ),
+  );
+};
 
 const fetchCommunityChannels = (guild: Maybe<Guild>): ChannelListType[] => {
   if (!guild) {
@@ -72,18 +82,9 @@ async function list(payload: MessagePayloadType) {
 }
 
 async function join(payload: MessagePayloadType) {
-  const currentChannelId = payload.source.channel.id;
-  const isBotChannel = Boolean(
-    payload.source.guild.channels.cache.find(
-      (channel) =>
-        channel.name === BOT_COMMANDS_CHANNEL &&
-        channel.id === currentChannelId,
-    ),
-  );
-
-  if (!isBotChannel) {
+  if (!isFromBotChannel(payload.source)) {
     await payload.source.reply(
-      'Please run this command in the #bot_commands channel',
+      `Please run this command in the #${BOT_COMMANDS_CHANNEL} channel`,
     );
     return;
   }
@@ -114,8 +115,36 @@ async function join(payload: MessagePayloadType) {
     });
 }
 
-async function unregister(payload) {
-  Logger.info('unregister cmd');
+async function leave(payload: MessagePayloadType) {
+  if (!isFromBotChannel(payload.source)) {
+    await payload.source.reply(
+      `Please run this command in the #${BOT_COMMANDS_CHANNEL} channel`,
+    );
+    return;
+  }
+
+  const strippedChannelName = stripChannelName(payload.source.content);
+  const communityChannels = fetchCommunityChannels(payload.source.guild);
+  const targetChannel = communityChannels.find(
+    ({ channel }) => stripChannelName(channel.name) === strippedChannelName,
+  )?.channel;
+
+  if (!targetChannel) {
+    await payload.source.reply('Unable to locate this channel');
+    return;
+  }
+
+  await targetChannel
+    .updateOverwrite(payload.source.author, {
+      VIEW_CHANNEL: false,
+      SEND_MESSAGES: false,
+      READ_MESSAGE_HISTORY: false,
+    })
+    .then(async () => await payload.source.reply('Successfully left channel'))
+    .catch(async (error) => {
+      Logger.error(error);
+      await payload.source.reply('Unable to leave channel :(');
+    });
 }
 
 async function create(payload) {
@@ -125,7 +154,7 @@ async function create(payload) {
 const CommandStore: CommandStoreType = {
   list,
   join,
-  unregister,
+  leave,
   create,
 };
 
