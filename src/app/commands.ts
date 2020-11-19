@@ -1,4 +1,4 @@
-import { Guild, GuildChannel } from 'discord.js';
+import { Guild, GuildChannel, Snowflake, TextChannel } from 'discord.js';
 import Logger from '../util/logger';
 import { Maybe } from '../util/types';
 import { DiscordMessageType, MessagePayloadType } from './messages';
@@ -8,6 +8,7 @@ type CommandStoreType = {
   join: (payload: MessagePayloadType) => Promise<void>;
   leave: (payload: MessagePayloadType) => Promise<void>;
   create: (payload: MessagePayloadType) => Promise<void>;
+  invite: (payload: MessagePayloadType) => Promise<void>;
 };
 
 type ChannelListType = {
@@ -27,6 +28,25 @@ const isFromBotChannel = (message: DiscordMessageType) => {
         name === BOT_COMMANDS_CHANNEL && id === currentChannelId,
     ),
   );
+};
+
+const fetchUser = (username: string, guild: Maybe<Guild>): Maybe<Snowflake> =>
+  guild?.members.cache.find((member) => username === member.user.tag)?.user.id;
+
+const fetchChannelAdmins = (channel: TextChannel) => {
+  // For the time being we use channel topics as the source of truth for who channel admins are.
+  // Eventually we'll migrate to some datastore in order for channel admins to use channel topics
+  // as a medium of communication to channel members.
+  if (!channel.topic) {
+    return [];
+  }
+
+  const [, users] = channel.topic.split(':') || [];
+  if (!users) {
+    return [];
+  }
+
+  return users.split(',').map((user) => user.trim());
 };
 
 const fetchCommunityChannels = (guild: Maybe<Guild>): ChannelListType[] => {
@@ -50,22 +70,13 @@ const fetchCommunityChannels = (guild: Maybe<Guild>): ChannelListType[] => {
 
       return categoryName === COMMUNITY_CATEGORY;
     })
-    .reduce((acc: ChannelListType[], channel) => {
-      const totalUsers = channel.permissionOverwrites.filter(
+    .map((channel) => ({
+      name: channel.name,
+      user_count: channel.permissionOverwrites.filter(
         (permission) => permission.type === 'member',
-      ).size;
-      if (totalUsers === 0) {
-        return acc;
-      }
-
-      acc.push({
-        name: channel.name,
-        user_count: totalUsers,
-        channel: channel,
-      });
-
-      return acc;
-    }, [])
+      ).size,
+      channel: channel,
+    }))
     .sort((a, b) => b.user_count - a.user_count);
 };
 
@@ -89,7 +100,13 @@ async function join(payload: MessagePayloadType) {
     return;
   }
 
-  const strippedChannelName = stripChannelName(payload.source.content);
+  const [, channel] = payload.source.content.split(' ');
+  if (!channel) {
+    await payload.source.reply('Invalid usage: `!join channel_name`');
+    return;
+  }
+
+  const strippedChannelName = stripChannelName(channel);
   const communityChannels = fetchCommunityChannels(payload.source.guild);
   const targetChannel = communityChannels.find(
     ({ channel }) => stripChannelName(channel.name) === strippedChannelName,
@@ -106,12 +123,10 @@ async function join(payload: MessagePayloadType) {
       SEND_MESSAGES: true,
       READ_MESSAGE_HISTORY: true,
     })
-    .then(
-      async () => await payload.source.reply('Successfully registered channel'),
-    )
+    .then(async () => await payload.source.reply('Successfully join channel'))
     .catch(async (error) => {
       Logger.error(error);
-      await payload.source.reply('Unable to register you for this channel :(');
+      await payload.source.reply('Unable to join this channel :(');
     });
 }
 
@@ -123,7 +138,13 @@ async function leave(payload: MessagePayloadType) {
     return;
   }
 
-  const strippedChannelName = stripChannelName(payload.source.content);
+  const [, channel] = payload.source.content.split(' ');
+  if (!channel) {
+    await payload.source.reply('Invalid usage: `!leave channel_name`');
+    return;
+  }
+
+  const strippedChannelName = stripChannelName(channel);
   const communityChannels = fetchCommunityChannels(payload.source.guild);
   const targetChannel = communityChannels.find(
     ({ channel }) => stripChannelName(channel.name) === strippedChannelName,
@@ -151,11 +172,62 @@ async function create(payload) {
   Logger.info('create cmd');
 }
 
+async function invite(payload: MessagePayloadType) {
+  const communityChannels = fetchCommunityChannels(payload.source.guild);
+  const currentChannelId = payload.source.channel.id;
+  const currentChannel = communityChannels.find(
+    ({ channel }) => channel.id === currentChannelId,
+  );
+  const isFromCommunityChannel = Boolean(currentChannel);
+  if (!isFromCommunityChannel) {
+    return;
+  }
+
+  const channelAdmins = fetchChannelAdmins(
+    payload.source.channel as TextChannel,
+  );
+  const canInvite =
+    payload.source.member.hasPermission('ADMINISTRATOR') ||
+    channelAdmins.includes(payload.source.author.tag);
+
+  if (!canInvite) {
+    await payload.source.reply('Insufficient permissions');
+    return;
+  }
+
+  const [, user] = payload.source.content.split(' ');
+  if (!user) {
+    await payload.source.reply('Invalid usage: `!invite user#1234`');
+    return;
+  }
+
+  const targetUser = fetchUser(user, payload.source.guild);
+  if (!targetUser) {
+    await payload.source.reply(`Unable to resolve \`${user}\``);
+    return;
+  }
+
+  await currentChannel.channel
+    .updateOverwrite(targetUser, {
+      VIEW_CHANNEL: true,
+      SEND_MESSAGES: true,
+      READ_MESSAGE_HISTORY: true,
+    })
+    .then(
+      async () => await payload.source.reply(`Successfully invited ${user}`),
+    )
+    .catch(async (error) => {
+      Logger.error(error);
+      await payload.source.reply('Unable to leave channel :(');
+    });
+}
+
 const CommandStore: CommandStoreType = {
   list,
   join,
   leave,
   create,
+  invite,
 };
 
 export default Object.freeze(CommandStore);
