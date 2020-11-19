@@ -101,7 +101,7 @@ async function join(payload: MessagePayloadType) {
     return;
   }
 
-  const [, channel] = payload.source.content.split(' ');
+  const channel = payload.args.join('_');
   if (!channel) {
     await payload.source.reply('Invalid usage: `!join channel_name`');
     return;
@@ -139,7 +139,7 @@ async function leave(payload: MessagePayloadType) {
     return;
   }
 
-  const [, channel] = payload.source.content.split(' ');
+  const channel = payload.args.join('_');
   if (!channel) {
     await payload.source.reply('Invalid usage: `!leave channel_name`');
     return;
@@ -196,7 +196,7 @@ async function invite(payload: MessagePayloadType) {
     return;
   }
 
-  const [, user] = payload.source.content.split(' ');
+  const user = payload.args.join(' ');
   if (!user) {
     await payload.source.reply('Invalid usage: `!invite user#1234`');
     return;
