@@ -9,6 +9,7 @@ type CommandStoreType = {
   leave: (payload: MessagePayloadType) => Promise<void>;
   create: (payload: MessagePayloadType) => Promise<void>;
   invite: (payload: MessagePayloadType) => Promise<void>;
+  help: (payload: MessagePayloadType) => Promise<void>;
 };
 
 type ChannelListType = {
@@ -222,12 +223,25 @@ async function invite(payload: MessagePayloadType) {
     });
 }
 
+async function help(payload: MessagePayloadType) {
+  await payload.source.reply(`**Available Commands:**
+\`\`\`
+!list - Lists available community channels
+!join channel_anme - Joins community channel
+!leave channel_name - Leaves community channel
+!create channel_name - Creates community channel
+!invite user#1234 - Invites user to community channel
+\`\`\`
+    `);
+}
+
 const CommandStore: CommandStoreType = {
   list,
   join,
   leave,
   create,
   invite,
+  help,
 };
 
 export default Object.freeze(CommandStore);
