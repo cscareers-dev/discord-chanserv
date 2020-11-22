@@ -1,4 +1,10 @@
-import { Guild, GuildChannel, Snowflake, TextChannel } from 'discord.js';
+import {
+  Guild,
+  GuildChannel,
+  MessageReaction,
+  Snowflake,
+  TextChannel,
+} from 'discord.js';
 import Logger from '../util/logger';
 import { Maybe } from '../util/types';
 import { DiscordMessageType, MessagePayloadType } from './messages';
@@ -12,6 +18,11 @@ type CommandStoreType = {
   help: (payload: MessagePayloadType) => Promise<void>;
 };
 
+type ChannelRequestType = {
+  user: string;
+  channelName: string;
+};
+
 type ChannelListType = {
   readonly name: string;
   readonly user_count: number;
@@ -20,6 +31,24 @@ type ChannelListType = {
 
 const COMMUNITY_CATEGORY = 'community channels';
 const BOT_COMMANDS_CHANNEL = 'bot_commands';
+const PENDING_COMMUNITY_CHANNELS = 'pending_community_channels';
+
+const createChannel = async (request: ChannelRequestType, guild: Guild) => {
+  const communityCategory = guild.channels.cache.find(
+    (channel) => channel.name === COMMUNITY_CATEGORY,
+  );
+  if (!communityCategory) {
+    throw new Error(
+      `Unable to locate community category ${JSON.stringify(request)}`,
+    );
+  }
+
+  await guild.channels.create(request.channelName, {
+    type: 'text',
+    topic: `Channel Admins: ${request.user}`,
+    parent: communityCategory,
+  });
+};
 
 const isFromBotChannel = (message: DiscordMessageType) => {
   const currentChannelId = message.channel.id;
@@ -169,8 +198,71 @@ async function leave(payload: MessagePayloadType) {
     });
 }
 
-async function create(payload) {
-  Logger.info('create cmd');
+async function create(payload: MessagePayloadType) {
+  if (!isFromBotChannel(payload.source) || !payload.source.guild) {
+    await payload.source.reply(
+      `Please run this command in the #${BOT_COMMANDS_CHANNEL} channel`,
+    );
+    return;
+  }
+
+  const communityChannels = fetchCommunityChannels(payload.source.guild);
+  const requestedChannelName = stripChannelName(
+    payload.args.map((segment) => segment.toLowerCase()).join('_'),
+  );
+  const channelExists = Boolean(
+    communityChannels.some(
+      (channel) => stripChannelName(channel.name) === requestedChannelName,
+    ) || payload.source.mentions.channels.size,
+  );
+
+  if (channelExists) {
+    await payload.source.reply('This channel already exists');
+    return;
+  }
+
+  const pendingChannel = payload.source.guild.channels.cache.find(
+    (channel) => channel.name === PENDING_COMMUNITY_CHANNELS,
+  ) as Maybe<TextChannel>;
+
+  if (!pendingChannel) {
+    await payload.source.reply('Channel requests are currently disabled.');
+    return;
+  }
+
+  await payload.source.reply(
+    'Your request has been submitted to the admins. We will contact you with next steps :)',
+  );
+
+  const channelRequest: ChannelRequestType = {
+    user: payload.source.author.tag,
+    channelName: requestedChannelName,
+  };
+
+  const pendingSubmission = await pendingChannel.send(
+    JSON.stringify(channelRequest, null, 2),
+  );
+
+  await pendingSubmission
+    .awaitReactions(
+      (reaction: MessageReaction) =>
+        ['👍', '👎'].includes(reaction.emoji.name) &&
+        reaction.message.id === pendingSubmission.id,
+      { max: 1, time: 86400000, errors: ['time'] },
+    )
+    .then(async (response) => {
+      const reaction = response.first();
+
+      if (reaction.emoji.name === '👍') {
+        await createChannel(channelRequest, payload.source.guild);
+        await payload.source.reply('🥳🥳 Your channel has been approved!');
+      } else {
+        await payload.source.reply(
+          'Your channel has been not been approved. Contact admins for further explanation.',
+        );
+      }
+    })
+    .catch(Logger.error);
 }
 
 async function invite(payload: MessagePayloadType) {
