@@ -130,6 +130,7 @@ async function channels(payload: MessagePayloadType) {
   let shouldSendInChannel = false;
   for (const message of messages) {
     try {
+      // We initially try sending these messages via DMs but a user can have their DMs disabled.
       await payload.source.author.send(message);
     } catch {
       shouldSendInChannel = true;
@@ -142,6 +143,13 @@ async function channels(payload: MessagePayloadType) {
       await payload.source.reply(message);
     }
   }
+
+  const createChannelMessage =
+    'Want to create your own channel? `!create channel_name`';
+
+  shouldSendInChannel
+    ? await payload.source.reply(createChannelMessage)
+    : await payload.source.author.send(createChannelMessage);
 }
 
 async function join(payload: MessagePayloadType) {
