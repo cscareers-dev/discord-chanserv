@@ -53,15 +53,11 @@ const createChannel = async (request: ChannelRequestType, guild: Guild) => {
   });
 };
 
-const isFromBotChannel = (message: DiscordMessageType) => {
-  const currentChannelId = message.channel.id;
-  return Boolean(
-    message.guild.channels.cache.find(
-      ({ name, id }) =>
-        name === BOT_COMMANDS_CHANNEL && id === currentChannelId,
-    ),
+const isFromBotChannel = (message: DiscordMessageType) =>
+  message.guild.channels.cache.some(
+    ({ name, id }) =>
+      name === BOT_COMMANDS_CHANNEL && id === message.channel.id,
   );
-};
 
 const isFromCommunityChannel = (message: DiscordMessageType) =>
   fetchCommunityChannels(message.guild).some(
@@ -71,28 +67,19 @@ const isFromCommunityChannel = (message: DiscordMessageType) =>
 const fetchUser = (username: string, guild: Maybe<Guild>): Maybe<Snowflake> =>
   guild?.members.cache.find((member) => username === member.user.tag)?.user.id;
 
-const fetchChannelAdmins = (channel: TextChannel) => {
-  // For the time being we use channel topics as the source of truth for who channel admins are.
-  // Eventually we'll migrate to some datastore in order for channel admins to use channel topics
-  // as a medium of communication to channel members.
-  if (!channel.topic) {
-    return [];
-  }
+// For the time being we use channel topics as the source of truth for who channel admins are.
+// Eventually we'll migrate to some datastore in order for channel admins to use channel topics
+// as a medium of communication to channel members.
+const fetchChannelAdmins = (channel: TextChannel) =>
+  Boolean(channel.topic)
+    ? (channel.topic.split(':')[1] || '')
+        .split(',')
+        .map((user) => user.trim())
+        .filter(Boolean)
+    : [];
 
-  const [, users] = channel.topic.split(':') || [];
-  if (!users) {
-    return [];
-  }
-
-  return users.split(',').map((user) => user.trim());
-};
-
-const fetchCommunityChannels = (guild: Maybe<Guild>): ChannelListType[] => {
-  if (!guild) {
-    return [];
-  }
-
-  return guild.channels.cache
+const fetchCommunityChannels = (guild: Maybe<Guild>): ChannelListType[] =>
+  guild?.channels.cache
     .filter((channel) => {
       const { parentID } = channel;
       if (!parentID) {
@@ -115,8 +102,7 @@ const fetchCommunityChannels = (guild: Maybe<Guild>): ChannelListType[] => {
       ).size,
       channel: channel,
     }))
-    .sort((a, b) => b.user_count - a.user_count);
-};
+    .sort((a, b) => b.user_count - a.user_count) || [];
 
 const stripChannelName = (input: string) =>
   input.replace('#', '').replace(/ /g, '_').toLowerCase();
