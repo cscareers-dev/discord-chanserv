@@ -144,8 +144,7 @@ async function channels(payload: MessagePayloadType) {
     }
   }
 
-  const createChannelMessage =
-    'Want to create your own channel? `!create channel_name`';
+  const createChannelMessage = `Create your own channel via \`!create channel_name\` in #${BOT_COMMANDS_CHANNEL}`;
 
   shouldSendInChannel
     ? await payload.source.reply(createChannelMessage)
