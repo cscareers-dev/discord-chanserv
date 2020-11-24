@@ -19,6 +19,7 @@ type CommandStoreType = {
   promote: (payload: MessagePayloadType) => Promise<void>;
   demote: (payload: MessagePayloadType) => Promise<void>;
   highlight: (payload: MessagePayloadType) => Promise<void>;
+  kick: (payload: MessagePayloadType) => Promise<void>;
 };
 
 type ChannelRequestType = {
@@ -408,6 +409,48 @@ async function highlight(payload: MessagePayloadType) {
   await payload.source.channel.send('@here');
 }
 
+async function kick(payload: MessagePayloadType) {
+  if (!isFromCommunityChannel(payload.source)) {
+    return;
+  }
+
+  const channel = payload.source.channel as TextChannel;
+  const channelAdmins = fetchChannelAdmins(channel);
+  const hasPermission =
+    payload.source.member.hasPermission('ADMINISTRATOR') ||
+    channelAdmins.includes(payload.source.author.tag);
+
+  if (!hasPermission) {
+    await payload.source.reply('Insufficient permissions');
+    return;
+  }
+
+  const user = payload.args.join(' ');
+  if (!user) {
+    await payload.source.reply('Invalid usage: `!kick user#1234`');
+    return;
+  }
+
+  const targetUser = fetchUser(user, payload.source.guild);
+  const isValidUser = Boolean(targetUser);
+  if (!isValidUser) {
+    await payload.source.reply(`Invalid username: \`${user}\``);
+    return;
+  }
+
+  await channel
+    .updateOverwrite(targetUser, {
+      VIEW_CHANNEL: false,
+      SEND_MESSAGES: false,
+      READ_MESSAGE_HISTORY: false,
+    })
+    .then(async () => await payload.source.reply(`Successfully kicked ${user}`))
+    .catch(async (error) => {
+      Logger.error(error);
+      await payload.source.reply('Unable to kick user');
+    });
+}
+
 const CommandStore: CommandStoreType = {
   list,
   join,
@@ -418,6 +461,7 @@ const CommandStore: CommandStoreType = {
   promote,
   demote,
   highlight,
+  kick,
 };
 
 export default Object.freeze(CommandStore);
