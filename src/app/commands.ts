@@ -17,6 +17,7 @@ type CommandStoreType = {
   invite: (payload: MessagePayloadType) => Promise<void>;
   help: (payload: MessagePayloadType) => Promise<void>;
   promote: (payload: MessagePayloadType) => Promise<void>;
+  demote: (payload: MessagePayloadType) => Promise<void>;
 };
 
 type ChannelRequestType = {
@@ -369,6 +370,53 @@ async function promote(payload: MessagePayloadType) {
   await payload.source.reply(`Successfully promoted ${user} to channel admin`);
 }
 
+async function demote(payload: MessagePayloadType) {
+  const communityChannels = fetchCommunityChannels(payload.source.guild);
+  const currentChannelId = payload.source.channel.id;
+  const currentChannel = communityChannels.find(
+    ({ channel }) => channel.id === currentChannelId,
+  );
+  const isFromCommunityChannel = Boolean(currentChannel);
+  if (!isFromCommunityChannel) {
+    return;
+  }
+
+  // Currently only admins are allowed to demote a user.
+  const isAdmin = payload.source.member.hasPermission('ADMINISTRATOR');
+  if (!isAdmin) {
+    await payload.source.reply('Insufficient permissions');
+    return;
+  }
+
+  const user = payload.args.join(' ');
+  if (!user) {
+    await payload.source.reply('Invalid usage: `!demote user#1234`');
+    return;
+  }
+
+  const isValidUser = Boolean(fetchUser(user, payload.source.guild));
+  if (!isValidUser) {
+    await payload.source.reply(`Invalid username: \`${user}\``);
+    return;
+  }
+
+  const channelAdmins = fetchChannelAdmins(
+    payload.source.channel as TextChannel,
+  );
+
+  if (!channelAdmins.includes(user)) {
+    await payload.source.reply(`${user} is not a channel admin`);
+    return;
+  }
+
+  await currentChannel.channel.setTopic(
+    `Channel Admins: ${channelAdmins
+      .filter((channelAdmin) => channelAdmin !== user)
+      .join(', ')}`,
+  );
+
+  await payload.source.reply(`Successfully demoted ${user}`);
+}
 const CommandStore: CommandStoreType = {
   list,
   join,
@@ -377,6 +425,7 @@ const CommandStore: CommandStoreType = {
   invite,
   help,
   promote,
+  demote,
 };
 
 export default Object.freeze(CommandStore);
