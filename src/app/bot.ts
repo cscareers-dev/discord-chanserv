@@ -10,7 +10,12 @@ async function run() {
   }
 
   const discordClient = new Client({
-    presence: { activity: { name: 'vibing' } },
+    presence: {
+      activity: {
+        name: '!help',
+        type: 'LISTENING',
+      },
+    },
   });
 
   discordClient
