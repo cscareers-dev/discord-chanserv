@@ -10,7 +10,7 @@ import { Maybe } from '../util/types';
 import { DiscordMessageType, MessagePayloadType } from './messages';
 
 type CommandStoreType = {
-  list: (payload: MessagePayloadType) => Promise<void>;
+  channels: (payload: MessagePayloadType) => Promise<void>;
   join: (payload: MessagePayloadType) => Promise<void>;
   leave: (payload: MessagePayloadType) => Promise<void>;
   create: (payload: MessagePayloadType) => Promise<void>;
@@ -108,7 +108,7 @@ const fetchCommunityChannels = (guild: Maybe<Guild>): ChannelListType[] =>
 const stripChannelName = (input: string) =>
   input.replace('#', '').replace(/ /g, '_').toLowerCase();
 
-async function list(payload: MessagePayloadType) {
+async function channels(payload: MessagePayloadType) {
   const communityChannels = fetchCommunityChannels(payload.source.guild);
 
   // TODO: Create user friendly response.
@@ -306,7 +306,7 @@ async function invite(payload: MessagePayloadType) {
 async function help(payload: MessagePayloadType) {
   await payload.source.reply(`**Available Commands:**
 \`\`\`
-!list - Lists available community channels
+!channels - Lists available community channels
 !join channel_anme - Joins community channel
 !leave channel_name - Leaves community channel
 !create channel_name - Creates community channel
@@ -452,7 +452,7 @@ async function kick(payload: MessagePayloadType) {
 }
 
 const CommandStore: CommandStoreType = {
-  list,
+  channels,
   join,
   leave,
   create,
