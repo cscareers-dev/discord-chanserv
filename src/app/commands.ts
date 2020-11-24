@@ -36,6 +36,7 @@ type ChannelListType = {
 const COMMUNITY_CATEGORY = 'community channels';
 const BOT_COMMANDS_CHANNEL = 'bot_commands';
 const PENDING_COMMUNITY_CHANNELS = 'pending_community_channels';
+const MAX_MESSAGE_LENGTH = 1750;
 
 const createChannel = async (request: ChannelRequestType, guild: Guild) => {
   const communityCategory = guild.channels.cache.find(
@@ -109,12 +110,38 @@ const stripChannelName = (input: string) =>
   input.replace('#', '').replace(/ /g, '_').toLowerCase();
 
 async function channels(payload: MessagePayloadType) {
-  const communityChannels = fetchCommunityChannels(payload.source.guild);
+  const communityChannels = fetchCommunityChannels(payload.source.guild).map(
+    (channel) => `${channel.name} - ${channel.user_count} users\n`,
+  );
 
-  // TODO: Create user friendly response.
-  await payload.source
-    .reply(JSON.stringify({ communityChannels }))
-    .catch(Logger.error);
+  const messages = communityChannels.reduce(
+    (acc: string[], chan) => {
+      const lastMessage = acc[acc.length - 1];
+      if (lastMessage.length + chan.length >= MAX_MESSAGE_LENGTH) {
+        acc.push(`${chan}`);
+      } else {
+        acc[acc.length - 1] += `${chan}`;
+      }
+      return acc;
+    },
+    ['**Available Channels:**\n'],
+  );
+
+  let shouldSendInChannel = false;
+  for (const message of messages) {
+    try {
+      await payload.source.author.send(message);
+    } catch {
+      shouldSendInChannel = true;
+      break;
+    }
+  }
+
+  if (shouldSendInChannel) {
+    for (const message of messages) {
+      await payload.source.reply(message);
+    }
+  }
 }
 
 async function join(payload: MessagePayloadType) {
