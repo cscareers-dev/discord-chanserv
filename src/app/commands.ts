@@ -115,12 +115,12 @@ async function channels(payload: MessagePayloadType) {
   );
 
   const messages = communityChannels.reduce(
-    (acc: string[], chan) => {
+    (acc: string[], channel) => {
       const lastMessage = acc[acc.length - 1];
-      if (lastMessage.length + chan.length >= MAX_MESSAGE_LENGTH) {
-        acc.push(`${chan}`);
+      if (lastMessage.length + channel.length >= MAX_MESSAGE_LENGTH) {
+        acc.push(channel);
       } else {
-        acc[acc.length - 1] += `${chan}`;
+        acc[acc.length - 1] += channel;
       }
       return acc;
     },
