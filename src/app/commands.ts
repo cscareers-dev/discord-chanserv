@@ -16,6 +16,7 @@ type CommandStoreType = {
   create: (payload: MessagePayloadType) => Promise<void>;
   invite: (payload: MessagePayloadType) => Promise<void>;
   help: (payload: MessagePayloadType) => Promise<void>;
+  promote: (payload: MessagePayloadType) => Promise<void>;
 };
 
 type ChannelRequestType = {
@@ -327,6 +328,47 @@ async function help(payload: MessagePayloadType) {
     `);
 }
 
+async function promote(payload: MessagePayloadType) {
+  const communityChannels = fetchCommunityChannels(payload.source.guild);
+  const currentChannelId = payload.source.channel.id;
+  const currentChannel = communityChannels.find(
+    ({ channel }) => channel.id === currentChannelId,
+  );
+  const isFromCommunityChannel = Boolean(currentChannel);
+  if (!isFromCommunityChannel) {
+    return;
+  }
+
+  // Currently only admins are allowed to promote a user to channel admin.
+  const isAdmin = payload.source.member.hasPermission('ADMINISTRATOR');
+  if (!isAdmin) {
+    await payload.source.reply('Insufficient permissions');
+    return;
+  }
+
+  const user = payload.args.join(' ');
+  if (!user) {
+    await payload.source.reply('Invalid usage: `!promote user#1234`');
+    return;
+  }
+
+  const isValidUser = Boolean(fetchUser(user, payload.source.guild));
+  if (!isValidUser) {
+    await payload.source.reply(`Invalid username: \`${user}\``);
+    return;
+  }
+
+  const channelAdmins = fetchChannelAdmins(
+    payload.source.channel as TextChannel,
+  );
+
+  await currentChannel.channel.setTopic(
+    `Channel Admins: ${[...channelAdmins, user].join(', ')}`,
+  );
+
+  await payload.source.reply(`Successfully promoted ${user} to channel admin`);
+}
+
 const CommandStore: CommandStoreType = {
   list,
   join,
@@ -334,6 +376,7 @@ const CommandStore: CommandStoreType = {
   create,
   invite,
   help,
+  promote,
 };
 
 export default Object.freeze(CommandStore);
