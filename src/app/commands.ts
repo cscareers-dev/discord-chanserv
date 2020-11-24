@@ -18,6 +18,7 @@ type CommandStoreType = {
   help: (payload: MessagePayloadType) => Promise<void>;
   promote: (payload: MessagePayloadType) => Promise<void>;
   demote: (payload: MessagePayloadType) => Promise<void>;
+  highlight: (payload: MessagePayloadType) => Promise<void>;
 };
 
 type ChannelRequestType = {
@@ -61,6 +62,11 @@ const isFromBotChannel = (message: DiscordMessageType) => {
     ),
   );
 };
+
+const isFromCommunityChannel = (message: DiscordMessageType) =>
+  fetchCommunityChannels(message.guild).some(
+    ({ channel }) => channel.id === message.channel.id,
+  );
 
 const fetchUser = (username: string, guild: Maybe<Guild>): Maybe<Snowflake> =>
   guild?.members.cache.find((member) => username === member.user.tag)?.user.id;
@@ -268,19 +274,12 @@ async function create(payload: MessagePayloadType) {
 }
 
 async function invite(payload: MessagePayloadType) {
-  const communityChannels = fetchCommunityChannels(payload.source.guild);
-  const currentChannelId = payload.source.channel.id;
-  const currentChannel = communityChannels.find(
-    ({ channel }) => channel.id === currentChannelId,
-  );
-  const isFromCommunityChannel = Boolean(currentChannel);
-  if (!isFromCommunityChannel) {
+  if (!isFromCommunityChannel(payload.source)) {
     return;
   }
 
-  const channelAdmins = fetchChannelAdmins(
-    payload.source.channel as TextChannel,
-  );
+  const channel = payload.source.channel as TextChannel;
+  const channelAdmins = fetchChannelAdmins(channel);
   const canInvite =
     payload.source.member.hasPermission('ADMINISTRATOR') ||
     channelAdmins.includes(payload.source.author.tag);
@@ -302,7 +301,7 @@ async function invite(payload: MessagePayloadType) {
     return;
   }
 
-  await currentChannel.channel
+  await channel
     .updateOverwrite(targetUser, {
       VIEW_CHANNEL: true,
       SEND_MESSAGES: true,
@@ -330,13 +329,7 @@ async function help(payload: MessagePayloadType) {
 }
 
 async function promote(payload: MessagePayloadType) {
-  const communityChannels = fetchCommunityChannels(payload.source.guild);
-  const currentChannelId = payload.source.channel.id;
-  const currentChannel = communityChannels.find(
-    ({ channel }) => channel.id === currentChannelId,
-  );
-  const isFromCommunityChannel = Boolean(currentChannel);
-  if (!isFromCommunityChannel) {
+  if (!isFromCommunityChannel(payload.source)) {
     return;
   }
 
@@ -359,11 +352,10 @@ async function promote(payload: MessagePayloadType) {
     return;
   }
 
-  const channelAdmins = fetchChannelAdmins(
-    payload.source.channel as TextChannel,
-  );
+  const channel = payload.source.channel as TextChannel;
+  const channelAdmins = fetchChannelAdmins(channel);
 
-  await currentChannel.channel.setTopic(
+  await channel.setTopic(
     `Channel Admins: ${[...channelAdmins, user].join(', ')}`,
   );
 
@@ -371,13 +363,7 @@ async function promote(payload: MessagePayloadType) {
 }
 
 async function demote(payload: MessagePayloadType) {
-  const communityChannels = fetchCommunityChannels(payload.source.guild);
-  const currentChannelId = payload.source.channel.id;
-  const currentChannel = communityChannels.find(
-    ({ channel }) => channel.id === currentChannelId,
-  );
-  const isFromCommunityChannel = Boolean(currentChannel);
-  if (!isFromCommunityChannel) {
+  if (!isFromCommunityChannel(payload.source)) {
     return;
   }
 
@@ -400,16 +386,15 @@ async function demote(payload: MessagePayloadType) {
     return;
   }
 
-  const channelAdmins = fetchChannelAdmins(
-    payload.source.channel as TextChannel,
-  );
+  const channel = payload.source.channel as TextChannel;
+  const channelAdmins = fetchChannelAdmins(channel);
 
   if (!channelAdmins.includes(user)) {
     await payload.source.reply(`${user} is not a channel admin`);
     return;
   }
 
-  await currentChannel.channel.setTopic(
+  await channel.setTopic(
     `Channel Admins: ${channelAdmins
       .filter((channelAdmin) => channelAdmin !== user)
       .join(', ')}`,
@@ -417,6 +402,26 @@ async function demote(payload: MessagePayloadType) {
 
   await payload.source.reply(`Successfully demoted ${user}`);
 }
+
+async function highlight(payload: MessagePayloadType) {
+  if (!isFromCommunityChannel(payload.source)) {
+    return;
+  }
+
+  const channel = payload.source.channel as TextChannel;
+  const channelAdmins = fetchChannelAdmins(channel);
+  const hasPermission =
+    payload.source.member.hasPermission('ADMINISTRATOR') ||
+    channelAdmins.includes(payload.source.author.tag);
+
+  if (!hasPermission) {
+    await payload.source.reply('Insufficient permissions');
+    return;
+  }
+
+  await payload.source.channel.send('@here');
+}
+
 const CommandStore: CommandStoreType = {
   list,
   join,
@@ -426,6 +431,7 @@ const CommandStore: CommandStoreType = {
   help,
   promote,
   demote,
+  highlight,
 };
 
 export default Object.freeze(CommandStore);
