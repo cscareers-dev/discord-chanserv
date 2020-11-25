@@ -6,6 +6,7 @@ import {
   ChannelRequestType,
   createChannel,
   fetchCommunityChannels,
+  INVALID_CHANNEL_NAMES,
   isFromBotChannel,
   stripChannelName,
 } from '../channels';
@@ -30,6 +31,11 @@ export default async function create(payload: MessagePayloadType) {
       (channel) => stripChannelName(channel.name) === requestedChannelName,
     ) || payload.source.mentions.channels.size,
   );
+
+  if (INVALID_CHANNEL_NAMES.has(requestedChannelName)) {
+    await payload.source.reply('Invalid channel name');
+    return;
+  }
 
   if (channelExists) {
     await payload.source.reply('This channel already exists');

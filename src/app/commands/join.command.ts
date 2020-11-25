@@ -2,6 +2,7 @@ import Logger from '../../util/logger';
 import {
   BOT_COMMANDS_CHANNEL,
   fetchCommunityChannels,
+  INVALID_CHANNEL_NAMES,
   isFromBotChannel,
   stripChannelName,
 } from '../channels';
@@ -22,6 +23,10 @@ export default async function join(payload: MessagePayloadType) {
   }
 
   const strippedChannelName = stripChannelName(channel);
+  if (INVALID_CHANNEL_NAMES.has(strippedChannelName)) {
+    await payload.source.reply('Invalid channel name');
+    return;
+  }
   const communityChannels = fetchCommunityChannels(payload.source.guild);
   const targetChannel = communityChannels.find(
     ({ channel }) => stripChannelName(channel.name) === strippedChannelName,
