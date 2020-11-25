@@ -43,7 +43,7 @@ export default async function join(payload: MessagePayloadType) {
       SEND_MESSAGES: true,
       READ_MESSAGE_HISTORY: true,
     })
-    .then(async () => await payload.source.reply('Successfully join channel'))
+    .then(async () => await payload.source.react('✅'))
     .catch(async (error) => {
       Logger.error(error);
       await payload.source.reply('Unable to join this channel :(');

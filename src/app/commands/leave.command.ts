@@ -38,7 +38,7 @@ export default async function leave(payload: MessagePayloadType) {
       SEND_MESSAGES: false,
       READ_MESSAGE_HISTORY: false,
     })
-    .then(async () => await payload.source.reply('Successfully left channel'))
+    .then(async () => await payload.source.react('✅'))
     .catch(async (error) => {
       Logger.error(error);
       await payload.source.reply('Unable to leave channel :(');
