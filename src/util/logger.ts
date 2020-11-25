@@ -1,3 +1,4 @@
+// @ts-nocheck
 type LoggerType = {
   info: (...args: any) => void;
   debug: (...args: any) => void;
