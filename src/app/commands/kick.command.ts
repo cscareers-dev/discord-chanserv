@@ -40,7 +40,7 @@ export default async function kick(payload: MessagePayloadType) {
       SEND_MESSAGES: false,
       READ_MESSAGE_HISTORY: false,
     })
-    .then(async () => await payload.source.reply(`Successfully kicked ${user}`))
+    .then(async () => await payload.source.react('✅'))
     .catch(async (error) => {
       Logger.error(error);
       await payload.source.reply('Unable to kick user');
