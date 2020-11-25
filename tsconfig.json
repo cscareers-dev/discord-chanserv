@@ -3,6 +3,7 @@
     "target": "ESNext",
     "module": "commonjs",
     "lib": ["es6"],
+    "types": ["node"],
     "allowJs": true,
     "outDir": "build",
     "rootDir": "src",
