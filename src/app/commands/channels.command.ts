@@ -5,7 +5,7 @@ const MAX_MESSAGE_LENGTH = 1750;
 
 export default async function channels(payload: MessagePayloadType) {
   const messages = fetchCommunityChannels(payload.source.guild)
-    .map((channel) => `${channel.name} - ${channel.user_count} users\n`)
+    .map((channel) => `${channel.name}\n`)
     .reduce(
       (acc: string[], channel) => {
         const idx = acc.length - 1;
