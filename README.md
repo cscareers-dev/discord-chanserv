@@ -1,37 +1,36 @@
-Chanserv is created with the intention of assisting the [cscareers.dev](http://cscareers.dev) community with sub-community channels.
+<p align="center">
+<img src="https://i.imgur.com/3XVmGsH.png" alt="Chanserv">
+</p>
 
-## **What's a sub-community?**
+# Introduction
 
-A sub-community channel is defined as a private channel that is "opt-in". Such that, a user can go to the `#bot_commands` channel, type `!join #san_francisco` and the user will be able to access the `#san_francisco` private channel. This idea can be translated to an IRC network. Where the Discord server is the IRC server and users are able to join/leave IRC channels (private channels) on-demand. This is where something like a chanserv will come into play.
+Chanserv is a Discord bot that empowers sub-communities to be built within a Discord server. This bot was initially created to help connect individuals in the cscareers.dev Discord server during the COVID-19 pandemic by allowing users to request channels based around different topics such as location, company, common interests, etc. As the name suggests, this bot was heavily inspired off of a typical [chanserv bot](http://www.geekshed.net/commands/chanserv/) from IRC.
 
-## **Functionality**
+Chanserv is currently supporting three roles - server admin, channel admin, and channel member. Server admins can be thought of as the staff running the server. Channel admins can be thought of as an administrator scoped locally to a community channel. Channel members are members that have joined a specific community channel.
 
-# P0:
+In a community channel, there can exist many channel admins who are assigned by server admins. Channel admins have the ability to invite, kick, and highlight their respective channel.
 
-Landing/Home Channel: If a user is in zero private channels, we need to make it apparent of this new functionality that we're adding!
+# Supported Commands
 
-- Display some sort of welcome channel based off whether or not they have some `Unregistered` role. Name of this role is up for debate, but ideally we just need some sort of way to deterministically know if they've joined a custom channel before or not.
+## User commands:
 
-Joining:
+- `!help` - View currently supported commands accessible by anyone.
+- `!channels` - View community channels that are publicly available to be joined
+- `!join channel_name` - Joins a specific community channel
+- `!leave channel_name` - Leaves a specific community channel
+- `!create channel_name` - Submits a request to create a community channel
 
-- A user should be able to view a list of available private channels to join.
-- Ideally, we would have this command be supported in a bot channel
-- We should send attempt to send a discord message with the list to avoid clutter in public channel. If the user has their DMs disabled, send it in the main channel.
+## Channel admin commands:
 
-Leaving:
+- `!kick username#1234` - Removes a user from the respective community channel
+- `!invite username#1234` - Invites a user to the respective community channel
+- `!highlight` - sends a `@here` Ping to the respective community channel
 
-- A user should be able to leave the custom channel they are in. Either by messaging the chanserv bot or the custom channel itself, `!leave <channel_name>`
+## Server admin commands:
 
-# P1:
+- `!promote username#1234` - Promotes a user to channel admin in respective community channel
+- `!demote username#1234` - Demotes a user to channel member in respective community channel
 
-Channel Admins:
+# Contributing
 
-Since the admins of the server simply cannot moderate all possible custom channels, we should give more power to individuals on a channel level. Channel admins will have enhanced moderation privileges local to the channel scope. A user can have many channel admins. Server admins should have the ability to promote/revoke members of the server to be channel admins on the local server level.
-
-Set channel topic:
-
-Channel admins should have the ability to set the topic of the channel via `!settopic <channel topic content>`
-
-Ban/remove member from a channel:
-
-Channel admins should have the ability to revoke a member from joining a channel.
+While requirements will change, we will create issues on an as needed basis. We are also open to your suggestions! You may either create an issue with your suggestion or you can create a suggestion in the [cscareers.dev Discord server](https://cscareers.dev/discord).
