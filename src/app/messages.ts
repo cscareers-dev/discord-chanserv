@@ -1,5 +1,5 @@
 import { Message } from 'discord.js';
-import CommandStore from './commands';
+import CommandStore from './command.store';
 import Logger from '../util/logger';
 
 export type DiscordMessageType = Message;
