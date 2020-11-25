@@ -17,7 +17,7 @@ export default async function demote(payload: MessagePayloadType) {
     return;
   }
 
-  const user = payload.args.join(' ');
+  const user = payload.source.content.split(' ').slice(1).join(' ');
   if (!user) {
     await payload.source.reply('Invalid usage: `!demote user#1234`');
     return;
@@ -25,7 +25,9 @@ export default async function demote(payload: MessagePayloadType) {
 
   const isValidUser = Boolean(fetchUser(user, payload.source.guild));
   if (!isValidUser) {
-    await payload.source.reply(`Invalid username: \`${user}\``);
+    await payload.source.reply(
+      `Invalid username (case sensitive): \`${user}\``,
+    );
     return;
   }
 

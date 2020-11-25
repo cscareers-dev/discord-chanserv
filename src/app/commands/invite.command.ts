@@ -20,7 +20,7 @@ export default async function invite(payload: MessagePayloadType) {
     return;
   }
 
-  const user = payload.args.join(' ');
+  const user = payload.source.content.split(' ').slice(1).join(' ');
   if (!user) {
     await payload.source.reply('Invalid usage: `!invite user#1234`');
     return;
@@ -28,7 +28,9 @@ export default async function invite(payload: MessagePayloadType) {
 
   const targetUser = fetchUser(user, payload.source.guild);
   if (!targetUser) {
-    await payload.source.reply(`Unable to resolve \`${user}\``);
+    await payload.source.reply(
+      `Invalid username (case sensitive): \`${user}\``,
+    );
     return;
   }
 
