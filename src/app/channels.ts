@@ -83,9 +83,7 @@ export const fetchCommunityChannels = (
     })
     .map((channel) => ({
       name: channel.name,
-      user_count: channel.permissionOverwrites.filter(
-        (permission) => permission.type === 'member',
-      ).size,
+      user_count: channel.members.size,
       channel: channel,
     }))
     .filter(
