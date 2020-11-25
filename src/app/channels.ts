@@ -31,11 +31,11 @@ export const createChannel = async (
     );
   }
 
-  await guild?.channels.create(request.channelName, {
+  return (await guild?.channels.create(request.channelName, {
     type: 'text',
     topic: `Channel Admins: ${request.user}`,
     parent: communityCategory,
-  });
+  })) as TextChannel;
 };
 
 export const isFromBotChannel = (message: DiscordMessageType) =>

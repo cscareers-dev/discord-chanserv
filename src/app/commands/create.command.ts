@@ -75,7 +75,15 @@ export default async function create(payload: MessagePayloadType) {
       const reaction = response.first();
 
       if (reaction?.emoji.name === '👍') {
-        await createChannel(channelRequest, payload.source.guild);
+        const newChannel = await createChannel(
+          channelRequest,
+          payload.source.guild,
+        );
+        await newChannel.updateOverwrite(payload.source.author, {
+          VIEW_CHANNEL: true,
+          SEND_MESSAGES: true,
+          READ_MESSAGE_HISTORY: true,
+        });
         await payload.source.reply('🥳🥳 Your channel has been approved!');
       } else {
         await payload.source.reply(
