@@ -22,12 +22,11 @@ export default async function join(payload: MessagePayloadType) {
     return;
   }
 
-  if (INVALID_CHANNEL_NAMES.has(channel)) {
+  const strippedChannelName = stripChannelName(channel);
+  if (INVALID_CHANNEL_NAMES.has(strippedChannelName)) {
     await payload.source.reply('Invalid channel name');
     return;
   }
-
-  const strippedChannelName = stripChannelName(channel);
   const communityChannels = fetchCommunityChannels(payload.source.guild);
   const targetChannel = communityChannels.find(
     ({ channel }) => stripChannelName(channel.name) === strippedChannelName,

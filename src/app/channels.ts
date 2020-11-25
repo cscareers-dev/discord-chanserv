@@ -88,7 +88,9 @@ export const fetchCommunityChannels = (
       ).size,
       channel: channel,
     }))
-    .filter((channel) => !INVALID_CHANNEL_NAMES.has(channel.name))
+    .filter(
+      (channel) => !INVALID_CHANNEL_NAMES.has(stripChannelName(channel.name)),
+    )
     .sort((a, b) => b.user_count - a.user_count) || [];
 
 export const stripChannelName = (input: string) =>
