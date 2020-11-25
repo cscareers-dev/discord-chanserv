@@ -83,6 +83,9 @@ export const fetchCommunityChannels = (
     })
     .map((channel) => ({
       name: channel.name,
+      // TODO (joey.colon): `user_count` is currently inaccurate. Since we use Discord overrides to assign members to channels,
+      // typical `members.size` returns only the count of admins online in each channel and not accurate total users.
+      // Investigate other methods of determining user count.
       user_count: channel.members.size,
       channel: channel,
     }))
