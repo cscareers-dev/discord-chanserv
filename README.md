@@ -14,22 +14,22 @@ In a community channel, there can exist many channel admins who are assigned by 
 
 ## User commands:
 
-- `!help` - view currently supported commands accessible by anyone.
-- `!channels` - view community channels that are publicly available to be joined
-- `!join channel_name` - joins a specific community channel
-- `!leave channel_name` - leaves a specific community channel
-- `!create channel_name` - submits a request to create a community channel
+- `!help` - View currently supported commands accessible by anyone.
+- `!channels` - View community channels that are publicly available to be joined
+- `!join channel_name` - Joins a specific community channel
+- `!leave channel_name` - Leaves a specific community channel
+- `!create channel_name` - Submits a request to create a community channel
 
 ## Channel admin commands:
 
-- `!kick username#1234` - removes a user from the respective community channel
-- `!invite username#1234` - invites a user to the respective community channel
-- `!highlight` - sends a `@here` ping to the respective community channel
+- `!kick username#1234` - Removes a user from the respective community channel
+- `!invite username#1234` - Invites a user to the respective community channel
+- `!highlight` - sends a `@here` Ping to the respective community channel
 
 ## Server admin commands:
 
-- `!promote username#1234` - promotes a user to channel admin in respective community channel
-- `!demote username#1234` - demotes a user to channel member in respective community channel
+- `!promote username#1234` - Promotes a user to channel admin in respective community channel
+- `!demote username#1234` - Demotes a user to channel member in respective community channel
 
 # Contributing
 
