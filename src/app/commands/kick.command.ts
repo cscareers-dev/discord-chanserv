@@ -12,7 +12,7 @@ export default async function kick(payload: MessagePayloadType) {
   const channel = payload.source.channel as TextChannel;
   const channelAdmins = fetchChannelAdmins(channel);
   const hasPermission =
-    payload.source.member.hasPermission('ADMINISTRATOR') ||
+    Boolean(payload.source.member?.hasPermission('ADMINISTRATOR')) ||
     channelAdmins.includes(payload.source.author.tag);
 
   if (!hasPermission) {
@@ -27,8 +27,7 @@ export default async function kick(payload: MessagePayloadType) {
   }
 
   const targetUser = fetchUser(user, payload.source.guild);
-  const isValidUser = Boolean(targetUser);
-  if (!isValidUser) {
+  if (!targetUser) {
     await payload.source.reply(`Invalid username: \`${user}\``);
     return;
   }
