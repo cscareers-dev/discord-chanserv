@@ -14,6 +14,7 @@ type ChannelListType = {
   readonly channel: GuildChannel;
 };
 
+export const INVALID_CHANNEL_NAMES = new Set(['instructions']);
 export const BOT_COMMANDS_CHANNEL = Constants.BotCommandsChannel;
 export const COMMUNITY_CATEGORY = Constants.CommunityCategory;
 
@@ -87,6 +88,7 @@ export const fetchCommunityChannels = (
       ).size,
       channel: channel,
     }))
+    .filter((channel) => !INVALID_CHANNEL_NAMES.has(channel.name))
     .sort((a, b) => b.user_count - a.user_count) || [];
 
 export const stripChannelName = (input: string) =>

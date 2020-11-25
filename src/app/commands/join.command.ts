@@ -2,6 +2,7 @@ import Logger from '../../util/logger';
 import {
   BOT_COMMANDS_CHANNEL,
   fetchCommunityChannels,
+  INVALID_CHANNEL_NAMES,
   isFromBotChannel,
   stripChannelName,
 } from '../channels';
@@ -18,6 +19,11 @@ export default async function join(payload: MessagePayloadType) {
   const channel = payload.args.join('_');
   if (!channel) {
     await payload.source.reply('Invalid usage: `!join channel_name`');
+    return;
+  }
+
+  if (INVALID_CHANNEL_NAMES.has(channel)) {
+    await payload.source.reply('Invalid channel name');
     return;
   }
 
