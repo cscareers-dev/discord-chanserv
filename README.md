@@ -4,7 +4,7 @@
 
 # Introduction
 
-Chanserv is a Discord bot that empowers sub-communities to be built within a Discord server. This bot was initially created to help connect individuals in the cscareers.dev Discord server during the COVID-19 pandemic. As the name suggests, this bot was heavily inspired off of a typical [chanserv bot](http://www.geekshed.net/commands/chanserv/) from IRC.
+Chanserv is a Discord bot that empowers sub-communities to be built within a Discord server. This bot was initially created to help connect individuals in the cscareers.dev Discord server during the COVID-19 pandemic. The bot allows users to request channels based around different topics such as location, company, common interests, etc. As the name suggests, this bot was heavily inspired off of a typical [chanserv bot](http://www.geekshed.net/commands/chanserv/) from IRC.
 
 Chanserv is currently supporting three roles - server admin, channel admin, and channel member. Server admins can be thought of as the staff running the server. Channel admins can be thought of as an administrator scoped locally to a community channel. Channel members are members that have joined a specific community channel.
 
