@@ -10,7 +10,7 @@ export default async function highlight(payload: MessagePayloadType) {
   const channel = payload.source.channel as TextChannel;
   const channelAdmins = fetchChannelAdmins(channel);
   const hasPermission =
-    payload.source.member.hasPermission('ADMINISTRATOR') ||
+    Boolean(payload.source.member?.hasPermission('ADMINISTRATOR')) ||
     channelAdmins.includes(payload.source.author.tag);
 
   if (!hasPermission) {

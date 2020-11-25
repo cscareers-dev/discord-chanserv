@@ -68,7 +68,7 @@ export default async function create(payload: MessagePayloadType) {
     .then(async (response) => {
       const reaction = response.first();
 
-      if (reaction.emoji.name === '👍') {
+      if (reaction?.emoji.name === '👍') {
         await createChannel(channelRequest, payload.source.guild);
         await payload.source.reply('🥳🥳 Your channel has been approved!');
       } else {

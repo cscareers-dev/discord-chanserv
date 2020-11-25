@@ -9,7 +9,9 @@ export default async function demote(payload: MessagePayloadType) {
   }
 
   // Currently only admins are allowed to demote a user.
-  const isAdmin = payload.source.member.hasPermission('ADMINISTRATOR');
+  const isAdmin = Boolean(
+    payload.source.member?.hasPermission('ADMINISTRATOR'),
+  );
   if (!isAdmin) {
     await payload.source.reply('Insufficient permissions');
     return;

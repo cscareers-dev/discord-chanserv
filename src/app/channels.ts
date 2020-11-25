@@ -19,9 +19,9 @@ export const COMMUNITY_CATEGORY = Constants.CommunityCategory;
 
 export const createChannel = async (
   request: ChannelRequestType,
-  guild: Guild,
+  guild: Maybe<Guild>,
 ) => {
-  const communityCategory = guild.channels.cache.find(
+  const communityCategory = guild?.channels.cache.find(
     (channel) => channel.name === COMMUNITY_CATEGORY,
   );
   if (!communityCategory) {
@@ -30,7 +30,7 @@ export const createChannel = async (
     );
   }
 
-  await guild.channels.create(request.channelName, {
+  await guild?.channels.create(request.channelName, {
     type: 'text',
     topic: `Channel Admins: ${request.user}`,
     parent: communityCategory,
@@ -38,9 +38,11 @@ export const createChannel = async (
 };
 
 export const isFromBotChannel = (message: DiscordMessageType) =>
-  message.guild.channels.cache.some(
-    ({ name, id }) =>
-      name === BOT_COMMANDS_CHANNEL && id === message.channel.id,
+  Boolean(
+    message.guild?.channels.cache.some(
+      ({ name, id }) =>
+        name === BOT_COMMANDS_CHANNEL && id === message.channel.id,
+    ),
   );
 
 export const isFromCommunityChannel = (message: DiscordMessageType) =>
@@ -53,7 +55,7 @@ export const isFromCommunityChannel = (message: DiscordMessageType) =>
 // as a medium of communication to channel members.
 export const fetchChannelAdmins = (channel: TextChannel) =>
   Boolean(channel.topic)
-    ? (channel.topic.split(':')[1] || '')
+    ? (channel.topic?.split(':')[1] || '')
         .split(',')
         .map((user) => user.trim())
         .filter(Boolean)

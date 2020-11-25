@@ -25,11 +25,9 @@ export const adaptMessage = (
 };
 
 export const handleMessage = async (payload: MessagePayloadType) => {
-  const isValidCommand = Boolean(CommandStore[payload.command]);
-  if (!isValidCommand) {
+  const fn = CommandStore.get(payload.command);
+  if (!fn) {
     return;
   }
-
-  const fn = CommandStore[payload.command];
   await fn(payload).catch(Logger.error);
 };

@@ -12,7 +12,7 @@ export default async function invite(payload: MessagePayloadType) {
   const channel = payload.source.channel as TextChannel;
   const channelAdmins = fetchChannelAdmins(channel);
   const canInvite =
-    payload.source.member.hasPermission('ADMINISTRATOR') ||
+    Boolean(payload.source.member?.hasPermission('ADMINISTRATOR')) ||
     channelAdmins.includes(payload.source.author.tag);
 
   if (!canInvite) {
