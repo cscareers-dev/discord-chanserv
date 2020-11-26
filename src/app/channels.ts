@@ -29,14 +29,14 @@ export const createChannel = async (
 
   // Since Discord categories are only allowed to have at most 50 child-channels, we need to determine
   // which available categories we can create this channel in.
-  const availableCategories = guild.channels.cache
+  const communityCategories = guild.channels.cache
     .filter((channel) => channel.name.startsWith(COMMUNITY_CATEGORY_PREFIX))
     .reduce((acc, channel) => {
       acc[channel.name] = [0, channel as CategoryChannel];
       return acc;
     }, {} as Record<string, [number, CategoryChannel]>);
 
-  if (Object.keys(availableCategories).length === 0) {
+  if (Object.keys(communityCategories).length === 0) {
     throw new Error(
       `Unable to locate community categories ${JSON.stringify(request)}`,
     );
@@ -51,13 +51,13 @@ export const createChannel = async (
       if (!categoryName) {
         return;
       }
-      const [channelCount, categoryChannel] = availableCategories[categoryName];
-      availableCategories[categoryName] = [channelCount + 1, categoryChannel];
+      const [channelCount, categoryChannel] = communityCategories[categoryName];
+      communityCategories[categoryName] = [channelCount + 1, categoryChannel];
     });
 
-  const availableCategoryName = Object.keys(availableCategories).find(
+  const availableCategoryName = Object.keys(communityCategories).find(
     (category) => {
-      const [channelCount] = availableCategories[category];
+      const [channelCount] = communityCategories[category];
       return channelCount < MAX_CHANNEL_LIMIT;
     },
   );
@@ -68,7 +68,7 @@ export const createChannel = async (
     );
   }
 
-  const [, communityCategory] = availableCategories[availableCategoryName];
+  const [, communityCategory] = communityCategories[availableCategoryName];
 
   return await guild.channels.create(request.channelName, {
     type: 'text',
