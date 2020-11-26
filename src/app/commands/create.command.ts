@@ -79,7 +79,7 @@ export default async function create(payload: MessagePayloadType) {
           channelRequest,
           payload.source.guild,
         );
-        await newChannel?.updateOverwrite(payload.source.author, {
+        await newChannel.updateOverwrite(payload.source.author, {
           VIEW_CHANNEL: true,
           SEND_MESSAGES: true,
           READ_MESSAGE_HISTORY: true,
