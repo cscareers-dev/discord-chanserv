@@ -49,7 +49,7 @@ export const createChannel = async (
         .get(channel.parentID || '')
         ?.name.toLowerCase();
       if (!categoryName) {
-        return false;
+        return;
       }
       const [channelCount, categoryChannel] = availableCategories[categoryName];
       availableCategories[categoryName] = [channelCount + 1, categoryChannel];
