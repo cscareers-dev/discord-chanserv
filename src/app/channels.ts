@@ -32,7 +32,7 @@ export const createChannel = async (
   const communityCategories = guild.channels.cache
     .filter((channel) => channel.name.startsWith(COMMUNITY_CATEGORY_PREFIX))
     .reduce((acc, channel) => {
-      acc[channel.name] = [0, channel as CategoryChannel];
+      acc[channel.name] = [1, channel as CategoryChannel];
       return acc;
     }, {} as Record<string, [number, CategoryChannel]>);
 
