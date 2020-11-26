@@ -35,7 +35,7 @@ export const createChannel = async (
     type: 'text',
     topic: `Channel Admins: ${request.user}`,
     parent: communityCategory,
-  })) as TextChannel;
+  })) as Maybe<TextChannel>;
 };
 
 export const isFromBotChannel = (message: DiscordMessageType) =>
