@@ -3,7 +3,7 @@ import Environment from '../environment';
 import { Client as DiscordClient, TextChannel } from 'discord.js';
 import { adaptMessage, DiscordMessageType, handleMessage } from './messages';
 import Constants from '../constants';
-import { isFromCommunityChannel } from './channels';
+import { BOT_COMMANDS_CHANNEL, isFromCommunityChannel } from './channels';
 import {
   BOT_COMMAND_EVENT,
   COMMUNITY_MESSAGE_EVENT,
@@ -41,13 +41,16 @@ async function run() {
 
     if (isBotCommandEvent) {
       const payload = adaptMessage(message);
+      const channelName = (message.channel as TextChannel).name;
       events.push(
         ...[
           handleMessage(payload),
-          analyticsClient.emit(message, BOT_COMMAND_EVENT, {
-            command: payload.command,
-            args: payload.args,
-          }),
+          channelName === BOT_COMMANDS_CHANNEL
+            ? analyticsClient.emit(message, BOT_COMMAND_EVENT, {
+                command: payload.command,
+                args: payload.args,
+              })
+            : null,
         ],
       );
     } else if (isFromCommunityChannel(message)) {
