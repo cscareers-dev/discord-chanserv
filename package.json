@@ -12,12 +12,14 @@
   "author": "<contact@joey.dev>",
   "license": "MIT",
   "dependencies": {
+    "@types/analytics-node": "^3.1.4",
     "@types/node": "^14.14.7",
     "@types/ws": "^7.4.0",
+    "analytics-node": "^3.4.0-beta.3",
     "discord.js": "^12.4.1",
     "dotenv": "^8.2.0",
-    "typescript": "^4.0.5",
-    "rimraf": "^3.0.2"
+    "rimraf": "^3.0.2",
+    "typescript": "^4.0.5"
   },
   "devDependencies": {
     "@typescript-eslint/eslint-plugin": "^4.7.0",
