@@ -1,15 +1,26 @@
 import Logger from '../util/logger';
 import Environment from '../environment';
-import { Client } from 'discord.js';
+import { Client as DiscordClient, TextChannel } from 'discord.js';
 import { adaptMessage, DiscordMessageType, handleMessage } from './messages';
 import Constants from '../constants';
+import { isFromCommunityChannel } from './channels';
+import {
+  BOT_COMMAND_EVENT,
+  COMMUNITY_MESSAGE_EVENT,
+  Analytics as AnalyticsClient,
+} from '../util/analytics';
 
 async function run() {
   if (!Environment.DiscordToken) {
     throw new Error('Unable to locate Discord token');
   }
 
-  const discordClient = new Client({
+  if (!Environment.SegmentToken) {
+    throw new Error('Unable to locate Segment token');
+  }
+
+  const analyticsClient = new AnalyticsClient(Environment.SegmentToken);
+  const discordClient = new DiscordClient({
     presence: {
       activity: {
         name: '!help',
@@ -24,15 +35,26 @@ async function run() {
     .catch(Logger.error);
 
   discordClient.on('message', async (message: DiscordMessageType) => {
-    const isValidMessage =
+    const isBotCommandEvent =
       !message.author.bot && message.content[0] === Constants.Prefix;
+    const events = [];
 
-    if (!isValidMessage) {
-      return;
+    if (isBotCommandEvent) {
+      const payload = adaptMessage(message);
+      events.push(
+        ...[
+          handleMessage(payload),
+          analyticsClient.emit(message, BOT_COMMAND_EVENT, {
+            command: payload.command,
+            args: payload.args,
+          }),
+        ],
+      );
+    } else if (isFromCommunityChannel(message)) {
+      events.push(analyticsClient.emit(message, COMMUNITY_MESSAGE_EVENT));
     }
 
-    const payload = adaptMessage(message);
-    await handleMessage(payload);
+    await Promise.all(events);
   });
 }
 
