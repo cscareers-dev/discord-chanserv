@@ -1,9 +1,20 @@
-import { BOT_COMMANDS_CHANNEL, fetchCommunityChannels } from '../channels';
+import {
+  BOT_COMMANDS_CHANNEL,
+  fetchCommunityChannels,
+  isFromBotChannel,
+} from '../channels';
 import { MessagePayloadType } from '../messages';
 
 const MAX_MESSAGE_LENGTH = 1750;
 
 export default async function channels(payload: MessagePayloadType) {
+  if (!isFromBotChannel(payload.source)) {
+    await payload.source.reply(
+      `Please run this command in the #${BOT_COMMANDS_CHANNEL} channel`,
+    );
+    return;
+  }
+
   const messages = fetchCommunityChannels(payload.source.guild)
     .map((channel) => `${channel.name}\n`)
     .reduce(
