@@ -16,7 +16,7 @@ export interface IAnalytics {
 
 export class SandboxAnalytics implements IAnalytics {
   async emit(message: DiscordMessageType, event: EventType, properties?: any) {
-    Logger.debug('[analytics emitted]: ', message, event, properties);
+    Logger.debug('[event emitted]: ', message, event, properties);
   }
 }
 
