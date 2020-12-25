@@ -1,12 +1,26 @@
 import { DiscordMessageType } from '../app/messages';
 import SegmentClient from 'analytics-node';
 import { TextChannel } from 'discord.js';
+import Logger from './logger';
 
 type EventType = 'bot_command_event' | 'community_message_event';
 export const BOT_COMMAND_EVENT = 'bot_command_event';
 export const COMMUNITY_MESSAGE_EVENT = 'community_message_event';
+export interface IAnalytics {
+  emit(
+    message: DiscordMessageType,
+    event: EventType,
+    properties?: any,
+  ): Promise<void>;
+}
 
-export class Analytics {
+export class SandboxAnalytics implements IAnalytics {
+  async emit(message: DiscordMessageType, event: EventType, properties?: any) {
+    Logger.debug('[analytics emitted]: ', message, event, properties);
+  }
+}
+
+export class Analytics implements IAnalytics {
   private _client;
 
   constructor(token: string) {

@@ -8,18 +8,25 @@ import {
   BOT_COMMAND_EVENT,
   COMMUNITY_MESSAGE_EVENT,
   Analytics as AnalyticsClient,
+  SandboxAnalytics as SandboxAnalyticsClient,
+  IAnalytics,
 } from '../util/analytics';
 
 async function run() {
+  const isProd = Environment.Playground === 'production';
+
   if (!Environment.DiscordToken) {
     throw new Error('Unable to locate Discord token');
   }
 
-  if (!Environment.SegmentToken) {
+  if (!Environment.SegmentToken && isProd) {
     throw new Error('Unable to locate Segment token');
   }
 
-  const analyticsClient = new AnalyticsClient(Environment.SegmentToken);
+  const analyticsClient: IAnalytics = isProd
+    ? new AnalyticsClient(Environment.SegmentToken!)
+    : new SandboxAnalyticsClient();
+
   const discordClient = new DiscordClient({
     presence: {
       activity: {
@@ -43,15 +50,13 @@ async function run() {
       const payload = adaptMessage(message);
       const channelName = (message.channel as TextChannel).name;
       events.push(
-        ...[
-          handleMessage(payload),
-          channelName === BOT_COMMANDS_CHANNEL
-            ? analyticsClient.emit(message, BOT_COMMAND_EVENT, {
-                command: payload.command,
-                args: payload.args,
-              })
-            : null,
-        ],
+        handleMessage(payload),
+        channelName === BOT_COMMANDS_CHANNEL
+          ? analyticsClient.emit(message, BOT_COMMAND_EVENT, {
+              command: payload.command,
+              args: payload.args,
+            })
+          : null,
       );
     } else if (isFromCommunityChannel(message)) {
       events.push(analyticsClient.emit(message, COMMUNITY_MESSAGE_EVENT));
