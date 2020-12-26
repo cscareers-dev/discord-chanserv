@@ -18,6 +18,7 @@
     "analytics-node": "^3.4.0-beta.3",
     "discord.js": "^12.4.1",
     "dotenv": "^8.2.0",
+    "fuse.js": "^6.4.3",
     "rimraf": "^3.0.2",
     "typescript": "^4.0.5"
   },
