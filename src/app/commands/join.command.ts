@@ -9,6 +9,7 @@ import {
   stripChannelName,
 } from '../channels';
 import { MessagePayloadType } from '../messages';
+import Fuse from 'fuse.js';
 
 const JOIN_MESSAGES = [
   'Have no fear, {user} is here!',
@@ -50,7 +51,20 @@ export default async function join(payload: MessagePayloadType) {
   )?.channel as Maybe<TextChannel>;
 
   if (!targetChannel) {
-    await payload.source.reply('Unable to locate this channel');
+    const fuse = new Fuse(
+      communityChannels.map((channel) => channel.name),
+      { includeScore: true },
+    );
+
+    const suggestedChannels = fuse
+      .search(strippedChannelName)
+      .filter((channel) => Boolean(channel.score))
+      .map((channel) => channel.item);
+
+    await payload.source.reply(`
+      Unable to locate this channel
+      Did you mean? \`${suggestedChannels.join(', ')}\`
+    `);
     return;
   }
 
